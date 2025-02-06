@@ -3,32 +3,34 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
+	_ "github.com/leedinh/video-rank/docs"
 	"github.com/leedinh/video-rank/handlers"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-var redisClient *redis.Client
-
-func initRedis() {
-	// Connect to Redis
-	redisClient = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
-}
-
+// @title Video Rank API
+// @version 1.0
+// @description This is a Microservice Ranking Video to rank videos based on user interactions.
+// @host localhost:8080
+// @BasePath /api
+// @schemes http
 func main() {
-	initRedis()
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+
 	r := gin.Default()
-	r.Group("/api")
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	v1 := r.Group("/api")
+	{
+		v1.POST("/interactions", func(c *gin.Context) {
+			handlers.HandleInteraction(c, redisClient)
+		})
 
-	r.POST("/interactions", func(c *gin.Context) {
-		handlers.HandleInteraction(c, redisClient)
-	})
-
-	r.GET("/ranks/:userID", func(c *gin.Context) {
-		handlers.HandleGetRank(c, redisClient)
-	})
-
+		v1.GET("/rankings", func(c *gin.Context) {
+			handlers.GetRankings(c, redisClient)
+		})
+	}
 	r.Run(":8080")
 }
