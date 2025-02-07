@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	_ "github.com/leedinh/video-rank/docs"
@@ -16,8 +18,13 @@ import (
 // @BasePath /api
 // @schemes http
 func main() {
+	redis_url := os.Getenv("REDIS_ADDR")
+	if redis_url == "" {
+		redis_url = "localhost:6379"
+	}
+
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: redis_url,
 	})
 
 	r := gin.Default()

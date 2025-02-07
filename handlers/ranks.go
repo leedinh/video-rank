@@ -39,7 +39,7 @@ func GetRankings(c *gin.Context, r *redis.Client) {
 	rankings, err := r.ZRevRangeWithScores(c, key, 0, int64(limit-1)).Result()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to get rankings",
+			"error": "Failed to get rankings " + err.Error(),
 		})
 		return
 	}

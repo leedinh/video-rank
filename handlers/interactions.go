@@ -48,7 +48,7 @@ func HandleInteraction(c *gin.Context, r *redis.Client) {
 		key := fmt.Sprintf("user:%s:rank", interaction.UserID)
 		if err := UpdateScore(r, c, key, interaction.VideoID, score); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to update user rank",
+				"error": "Failed to update user rank: " + err.Error(),
 			})
 			return
 		}
@@ -57,7 +57,7 @@ func HandleInteraction(c *gin.Context, r *redis.Client) {
 	// Update global rank
 	if err := UpdateScore(r, c, "global_rank", interaction.VideoID, score); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to update global rank",
+			"error": "Failed to update global rank " + err.Error(),
 		})
 		return
 	}
