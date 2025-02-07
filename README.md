@@ -13,7 +13,10 @@
 
 - **POST /api/interactions**: Submit an interaction (view, like, etc.).
 - **GET /api/rankings**: Retrieve top videos (global or per-user).
-- **GET /swagger/index.html** Document for api.
+
+## Usage
+
+Visit `http://localhost:8080/swagger/index.html` for the documentaion of the APIs. 
 
 ## Testing
 
