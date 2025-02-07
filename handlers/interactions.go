@@ -45,15 +45,17 @@ func HandleInteraction(c *gin.Context, r *redis.Client) {
 
 	// If user ID is not provided, update global rank
 	if interaction.UserID != "" {
-		if err := r.ZIncrBy(c, "user:"+interaction.UserID+":rank", score, interaction.VideoID).Err(); err != nil {
+		key := fmt.Sprintf("user:%s:rank", interaction.UserID)
+		if err := UpdateScore(r, c, key, interaction.VideoID, score); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to update rank",
+				"error": "Failed to update user rank",
 			})
 			return
 		}
 	}
 
-	if err := r.ZIncrBy(c, "global_rank", score, interaction.VideoID).Err(); err != nil {
+	// Update global rank
+	if err := UpdateScore(r, c, "global_rank", interaction.VideoID, score); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to update global rank",
 		})
@@ -63,6 +65,14 @@ func HandleInteraction(c *gin.Context, r *redis.Client) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "Success",
 	})
+}
+
+func UpdateScore(r *redis.Client, ctx *gin.Context, key, videoID string, score float64) error {
+	if err := r.ZIncrBy(ctx, key, score, videoID).Err(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Assume score formula is as follows:

@@ -1,9 +1,54 @@
 package handlers
 
 import (
+	"context"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 )
 
+var ctx = context.Background()
+var RedisClient = redis.NewClient(&redis.Options{
+	Addr: "localhost:6379",
+	DB:   1, // new database for testing
+})
+
+func ResetRedis() {
+	RedisClient.FlushDB(ctx)
+}
+
+func TestUpdateRank(t *testing.T) {
+	ResetRedis()
+	// Add some initial ranks
+	RedisClient.ZAdd(ctx, "global_rank", &redis.Z{
+		Score:  10,
+		Member: "video1",
+	})
+	RedisClient.ZAdd(ctx, "global_rank", &redis.Z{
+		Score:  20,
+		Member: "video2",
+	})
+	RedisClient.ZAdd(ctx, "global_rank", &redis.Z{
+		Score:  30,
+		Member: "video3",
+	})
+
+	// Update score
+	err := UpdateScore(RedisClient, &gin.Context{}, "global_rank", "video1", 5)
+	if err != nil {
+		t.Errorf("Failed to update score: %v", err)
+	}
+
+	// Check if rank is updated
+	rank, err := RedisClient.ZScore(ctx, "global_rank", "video1").Result()
+	if err != nil {
+		t.Errorf("Failed to get rank: %v", err)
+	}
+	if rank != 15 {
+		t.Errorf("Expected rank to be 15, got %v", rank)
+	}
+}
 func TestCalculateScore(t *testing.T) {
 	tests := []struct {
 		name            string
